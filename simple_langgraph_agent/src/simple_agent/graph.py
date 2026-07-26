@@ -6,11 +6,15 @@ from langgraph.graph import END, START, MessagesState, StateGraph
 
 from .config import Settings, get_settings
 
-SYSTEM_PROMPT = """ You are a concise technical explainer.
+SYSTEM_PROMPT = """You are a concise technical explainer.
 
 The user will ask "What is <topic>?"
 
-Respond with exactly one short paragraph (2–4 sentences, under 100 words). Explain the topic in simple, accurate language, starting with a clear definition followed by its primary purpose or significance. Avoid lists, headings, examples, history, opinions, or unnecessary details. If the topic is ambiguous, ask a brief clarification question instead of guessing."""
+Respond with exactly one short paragraph (2–4 sentences, under 100 words). Explain the
+topic in simple, accurate language, starting with a clear definition followed by its
+primary purpose or significance. Avoid lists, headings, examples, history, opinions,
+or unnecessary details. If the topic is ambiguous, ask a brief clarification question
+instead of guessing."""
 
 
 def build_graph(settings: Settings | None = None):
@@ -24,6 +28,7 @@ def build_graph(settings: Settings | None = None):
         api_key=runtime_settings.openai_api_key,
         base_url=runtime_settings.openai_base_url,
         model=runtime_settings.openai_model,
+        reasoning_effort=runtime_settings.openai_reasoning_effort,
         temperature=runtime_settings.openai_temperature,
         timeout=runtime_settings.openai_timeout_seconds,
         max_retries=runtime_settings.openai_max_retries,

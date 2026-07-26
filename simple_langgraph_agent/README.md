@@ -20,14 +20,44 @@ cp .env.example .env
 # Edit .env and set your university-issued OPENAI_API_KEY
 ```
 
-The included example points to the ASU gateway and uses `gpt-oss-120b`. The gateway
-URL must include `/v1`.
+The included example points to the ASU gateway and uses
+`qwen3-30b-a3b-instruct-2507`. The gateway URL must include `/v1`.
 
 ## Run
 
 ```bash
 python -m simple_agent.cli "Explain what an API is in one sentence."
 ```
+
+## Run the DeepEval practice eval
+
+Generate synthetic single-turn goldens using the configured gateway:
+
+```bash
+python -m evals.generate_dataset --num-goldens 10
+```
+
+Run the agent against those goldens with three metrics:
+
+```bash
+python -m evals.run_eval
+```
+
+The deterministic format metric is enabled by default. To disable it for a later
+LLM-judge format metric, set this in `.env`:
+
+```env
+ENABLE_DETERMINISTIC_FORMAT=false
+```
+
+The evals run sequentially by default and wait one second between gateway requests.
+Adjust `DEEPEVAL_MAX_CONCURRENT`, `DEEPEVAL_THROTTLE_SECONDS`, and
+`DEEPEVAL_REQUEST_DELAY_SECONDS` in `.env` if your gateway has different limits.
+
+Synthetic goldens are saved under `evals/data/`. Review them before treating them as
+a regression dataset. Each saved golden contains only `input`, `actual_output`, and
+`expected_output`; the latter two are `null` because the agent output is created during
+the evaluation run.
 
 ## Use as a library
 
@@ -49,4 +79,8 @@ src/simple_agent/
   config.py       Environment-backed settings
   graph.py        The one-node LangGraph workflow
   cli.py          Minimal CLI
+evals/
+  generate_dataset.py   Synthetic DeepEval golden generation
+  run_eval.py           End-to-end DeepEval run
+  metrics/              DeepEval metrics
 ```
