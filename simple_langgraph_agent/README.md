@@ -37,11 +37,15 @@ Generate synthetic single-turn goldens using the configured gateway:
 python -m evals.generate_dataset --num-goldens 10
 ```
 
-Run the agent against those goldens with three metrics:
+Run the agent against the synthetic and manually reviewed goldens:
 
 ```bash
 python -m evals.run_eval
 ```
+
+The synthetic run checks format, relevance, definition and purpose, and prompt
+alignment. The manually reviewed API case adds a correctness check against its
+expected output.
 
 The deterministic format metric is enabled by default. To disable it for a later
 LLM-judge format metric, set this in `.env`:
@@ -55,9 +59,8 @@ Adjust `DEEPEVAL_MAX_CONCURRENT`, `DEEPEVAL_THROTTLE_SECONDS`, and
 `DEEPEVAL_REQUEST_DELAY_SECONDS` in `.env` if your gateway has different limits.
 
 Synthetic goldens are saved under `evals/data/`. Review them before treating them as
-a regression dataset. Each saved golden contains only `input`, `actual_output`, and
-`expected_output`; the latter two are `null` because the agent output is created during
-the evaluation run.
+a regression dataset. The manually reviewed correctness case is stored in
+`evals/data/manual_goldens.json`.
 
 ## Use as a library
 

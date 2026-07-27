@@ -1,4 +1,4 @@
-"""Run the simple agent against synthetic DeepEval goldens."""
+"""Run the simple agent against synthetic and manually reviewed goldens."""
 
 from __future__ import annotations
 
@@ -16,18 +16,14 @@ from simple_agent.graph import build_graph
 
 from .metrics import build_metrics
 
-DATASET_PATH = Path(__file__).parent / "data" / "synthetic_goldens.json"
+DATA_DIR = Path(__file__).parent / "data"
+DATASET_PATH = DATA_DIR / "synthetic_goldens.json"
+REVIEWED_DATASET_PATH = DATA_DIR / "manual_goldens.json"
 
 
-def run_eval() -> None:
-    if not DATASET_PATH.exists():
-        raise FileNotFoundError(
-            f"Dataset not found at {DATASET_PATH}. Run "
-            "python -m evals.generate_dataset first."
-        )
-
+def _load_test_cases(dataset_path: Path) -> list[LLMTestCase]:
     dataset = EvaluationDataset()
-    dataset.add_goldens_from_json_file(str(DATASET_PATH))
+    dataset.add_goldens_from_json_file(str(dataset_path))
     graph = build_graph(get_settings())
     test_cases = []
 
@@ -42,16 +38,42 @@ def run_eval() -> None:
                 expected_output=golden.expected_output,
             )
         )
+    return test_cases
+
+
+def _run_dataset(
+    dataset_path: Path,
+    identifier: str,
+    include_correctness: bool,
+) -> None:
+    if not dataset_path.exists():
+        message = f"Dataset not found at {dataset_path}."
+        if dataset_path == DATASET_PATH:
+            message += " Run python -m evals.generate_dataset first."
+        raise FileNotFoundError(message)
 
     evaluate(
-        test_cases=test_cases,
-        metrics=build_metrics(),
-        identifier="simple-langgraph-agent",
+        test_cases=_load_test_cases(dataset_path),
+        metrics=build_metrics(include_correctness=include_correctness),
+        identifier=identifier,
         async_config=AsyncConfig(
             run_async=False,
             throttle_value=float(os.getenv("DEEPEVAL_THROTTLE_SECONDS", "1")),
             max_concurrent=int(os.getenv("DEEPEVAL_MAX_CONCURRENT", "1")),
         ),
+    )
+
+
+def run_eval() -> None:
+    _run_dataset(
+        DATASET_PATH,
+        identifier="simple-langgraph-agent-synthetic",
+        include_correctness=False,
+    )
+    _run_dataset(
+        REVIEWED_DATASET_PATH,
+        identifier="simple-langgraph-agent-reviewed",
+        include_correctness=True,
     )
 
 
