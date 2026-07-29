@@ -11,33 +11,52 @@ from ..models import GatewayEvaluationModel
 from .deterministic_format import DeterministicFormatMetric
 
 
-def _env_bool(name: str, default: bool) -> bool:
-    value = os.getenv(name)
-    if value is None:
-        return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
+def _format_checker(value: str | None) -> str:
+    checker = (value or os.getenv("FORMAT_CHECKER", "deterministic")).strip().lower()
+    if checker not in {"deterministic", "llm", "both"}:
+        raise ValueError("FORMAT_CHECKER must be deterministic, llm, or both")
+    return checker
+
+
+def _llm_format_metric(judge: GatewayEvaluationModel) -> GEval:
+    return GEval(
+        name="LLM Format",
+        evaluation_steps=[
+            "Check that the response contains exactly one paragraph.",
+            "Check that the response has 2 to 4 sentences.",
+            "Check that the response is under 100 words.",
+            "Check that the response avoids lists and headings.",
+        ],
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        threshold=0.8,
+        model=judge,
+        async_mode=False,
+        verbose_mode=True,
+    )
 
 
 def build_metrics(
-    include_deterministic_format: bool | None = None,
+    format_checker: str | None = None,
     include_correctness: bool = True,
 ):
     """Return the enabled DeepEval metrics for one evaluation run."""
 
-    if include_deterministic_format is None:
-        include_deterministic_format = _env_bool("ENABLE_DETERMINISTIC_FORMAT", True)
-
+    checker = _format_checker(format_checker)
     judge = GatewayEvaluationModel()
     metrics = []
-    if include_deterministic_format:
+    if checker in {"deterministic", "both"}:
         metrics.append(DeterministicFormatMetric())
+    if checker in {"llm", "both"}:
+        metrics.append(_llm_format_metric(judge))
 
     metrics.extend(
         [
             AnswerRelevancyMetric(
                 threshold=0.8,
                 model=judge,
+                include_reason=True,
                 async_mode=False,
+                verbose_mode=True,
             ),
             GEval(
                 name="Definition and Purpose",
@@ -56,6 +75,7 @@ def build_metrics(
                 threshold=0.8,
                 model=judge,
                 async_mode=False,
+                verbose_mode=True,
             ),
             PromptAlignmentMetric(
                 prompt_instructions=[
@@ -70,7 +90,9 @@ def build_metrics(
                 ],
                 threshold=0.8,
                 model=judge,
+                include_reason=True,
                 async_mode=False,
+                verbose_mode=True,
             ),
         ]
     )
@@ -93,6 +115,7 @@ def build_metrics(
                 threshold=0.8,
                 model=judge,
                 async_mode=False,
+                verbose_mode=True,
             )
         )
 
