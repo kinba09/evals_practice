@@ -1,6 +1,8 @@
 [
   {
+    "name": "basic-concepts-api",
     "input": "What is an API?",
-    "expected_output": "An API is an interface that allows software applications to communicate with each other."
+    "expected_output": "An API is an interface that allows software applications to communicate with each other.",
+    "additional_metadata": {"category": "Basic concepts"}
   }
 ]

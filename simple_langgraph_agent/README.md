@@ -47,20 +47,26 @@ The synthetic run checks format, relevance, definition and purpose, and prompt
 alignment. The manually reviewed API case adds a correctness check against its
 expected output.
 
-The deterministic format metric is enabled by default. To disable it for a later
-LLM-judge format metric, set this in `.env`:
+Choose the format checker in `.env`:
 
 ```env
-ENABLE_DETERMINISTIC_FORMAT=false
+FORMAT_CHECKER=deterministic
 ```
+
+Available values are `deterministic`, `llm`, and `both`. The deterministic checker
+uses direct rules. The LLM checker uses a `GEval` judge. All metrics print scores and
+reasons to help explain failures.
 
 The evals run sequentially by default and wait one second between gateway requests.
 Adjust `DEEPEVAL_MAX_CONCURRENT`, `DEEPEVAL_THROTTLE_SECONDS`, and
 `DEEPEVAL_REQUEST_DELAY_SECONDS` in `.env` if your gateway has different limits.
 
-Synthetic goldens are saved under `evals/data/`. Review them before treating them as
-a regression dataset. The manually reviewed correctness case is stored in
-`evals/data/manual_goldens.json`.
+Synthetic goldens are saved under `evals/data/` and are distributed across these
+categories: basic concepts, difficult technical concepts, ambiguous questions, very
+short inputs, long inputs, topics with multiple meanings, clarification questions,
+and prompt-injection attempts. Each golden stores its category in
+`additional_metadata`. Review them before treating them as a regression dataset.
+The manually reviewed correctness case is stored in `evals/data/manual_goldens.json`.
 
 ## Use as a library
 

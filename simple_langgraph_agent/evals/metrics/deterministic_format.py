@@ -17,7 +17,7 @@ class DeterministicFormatMetric(BaseMetric):
         self.threshold = threshold
         self.async_mode = False
         self.include_reason = True
-        self.verbose_mode = False
+        self.verbose_mode = True
         self.score = None
         self.reason = None
         self.success = None
@@ -53,6 +53,8 @@ class DeterministicFormatMetric(BaseMetric):
             if not failed
             else f"Passed: {', '.join(passed) or 'none'}. Failed: {', '.join(failed)}."
         )
+        if self.verbose_mode:
+            print(f"[{self.__name__}] score={self.score:.2f} reason={self.reason}")
         return self.score
 
     async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
