@@ -2,10 +2,8 @@
 
 import argparse
 
-from langchain_core.messages import HumanMessage
-
 from .config import get_settings
-from .graph import build_graph
+from .runner import run_agent
 
 
 def main() -> None:
@@ -13,9 +11,8 @@ def main() -> None:
     parser.add_argument("message", help="The message to send to the agent")
     args = parser.parse_args()
 
-    graph = build_graph(get_settings())
-    result = graph.invoke({"messages": [HumanMessage(content=args.message)]})
-    print(result["messages"][-1].content)
+    result = run_agent(args.message, settings=get_settings())
+    print(result.final_output)
 
 
 if __name__ == "__main__":
